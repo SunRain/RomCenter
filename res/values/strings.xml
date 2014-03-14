@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">RomCenter</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_home">Home</string>
+    <string name="menu_ota">OTA</string>
+
+
+    <string name="network_unavailable">Can\'t connect to network</string>
+    <string name="no_wifi_warning">You\'re not using wifi now, do U want to continue?</string>
+    
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    
+    <!-- ota fragment-->
+    <string name="title_ota">OTA Center</string>
+    <string name="no_ota_available">No updates now, please refresh the list.</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="ota_cur_verison">Current Verison is : %s</string>
+    <string name="ota_update_site_info">Please visit our download site:%s if ota failed</string>
+    <string name="ota_update_dialog_title">OTA Update</string>
+    <string name="ota_update_dialog_download_content">Do you want to download this file?</string>
+    <string name="ota_update_dialog_install_content">Do you want to install this udate?</string>
+    <string name="ota_fragment_open_waning">WARNING:OTA Update is still in development!!!</string>
+    <string name="no_sdcard_worning">Can\'t find SD card!</string>
+    <string name="no_enough_space_worning">No enought space!</string>
+    <string name="no_new_version_worning">No new version available!</string> 
+    <string name="ota_install_failed">OTA file installed FAILED!!</string>
+    <string name="ota_file_has_installed">Current verison has installed!</string>
+    
+    <!-- home fragment -->
+    <string name="home_fourm">Forum Support</string>
+    <string name="home_website">Web Site</string>
+    <string name="home_download">Download</string>
+    <string name="home_gerrit">Gerrit</string>
+    <string name="title_home">Home</string>
+    <string name="refresh_fail">Refresh failed!!</string>
+    
+    
+    
+</resources>

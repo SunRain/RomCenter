@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <!-- 
+    <LinearLayout
+        android:id="@+id/ota_item_detail_root_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
+
+        <com.magicmod.romcenter.widget.CustomWebView
+            android:id="@+id/customWebView1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+ -->
+    <LinearLayout
+        android:id="@+id/ota_list_root_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
+
+        <ImageView
+            android:id="@+id/ota_fragment_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleType="fitXY"
+            android:src="@drawable/banner" />
+
+        <TextView
+            android:id="@+id/ota_fragment_update_site_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dip"
+            android:layout_marginLeft="5dip"
+            android:layout_marginTop="3dip"
+            android:text="TextView" />
+
+        <TextView
+            android:id="@+id/ota_fragment_cur_rom_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dip"
+            android:layout_marginLeft="5dip"
+            android:layout_marginTop="3dip"
+            android:text="TextView" />
+
+        <ListView
+            android:id="@+id/ota_fragment_update_lists"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dip" >
+        </ListView>
+    </LinearLayout>
+
+</FrameLayout>
