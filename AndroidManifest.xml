@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="com.magicmod.romcenter"
-    android:versionCode="1"
-    android:versionName="1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    android:versionCode="1.1"
+    android:versionName="1.1" xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-sdk
         android:minSdkVersion="16"
@@ -20,6 +20,7 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.REBOOT"/>
     <uses-permission android:name="android.permission.ACCESS_CACHE_FILESYSTEM"/>
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
 
     <application
         android:allowBackup="true"
@@ -36,16 +37,19 @@
             </intent-filter>
         </activity>
         <!-- service android:name="com.magicmod.cloudserver.netdisk.DownLoader$DownloadService"></service -->
-        <receiver android:name="OtaDownloadReceiver">
+        <!-- receiver android:name="OtaDownloadReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.DOWNLOAD_COMPLETE"/>
                 <action android:name="com.magicmod.cloudserver.netdisk.action.START_DOWNLOAD"/>
                 <action android:name="com.magicmod.cloudserver.netdisk.action.DOWNLOAD_STARTED"/>
             </intent-filter>
 
-        </receiver>
-        <service android:name="OtaDownloadService"></service>
-        <service android:name="com.magicmod.cloudserver.netdisk.BaseDownloadService"></service>
-    </application>
+        </receiver-->
+        <!-- service android:name="OtaDownloadService"></service-->
+        <service
+            android:name="com.magicmod.cloudserver.netdisk.BaseDownloadService" >
+            <!-- android:process=":BaseDownloadService" -->
+        </service>
+</application>
 
 </manifest>

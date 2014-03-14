@@ -23,12 +23,17 @@
     <string name="ota_update_dialog_title">OTA Update</string>
     <string name="ota_update_dialog_download_content">Do you want to download this file?</string>
     <string name="ota_update_dialog_install_content">Do you want to install this udate?</string>
+    <string name="ota_update_dialog_stop_dl_content">Do you want to stop downloading? All downloaded data will be removed.</string>
+    <string name="ota_update_warning_one_download_running">A download task is running.</string>
     <string name="ota_fragment_open_waning">WARNING:OTA Update is still in development!!!</string>
     <string name="no_sdcard_worning">Can\'t find SD card!</string>
     <string name="no_enough_space_worning">No enought space!</string>
     <string name="no_new_version_worning">No new version available!</string> 
     <string name="ota_install_failed">OTA file installed FAILED!!</string>
     <string name="ota_file_has_installed">Current verison has installed!</string>
+    <string name="ota_item_summary_new">New</string>
+    <string name="ota_item_summary_install">Install</string>
+    <string name="ota_item_summary_installed">Installed</string>
     
     <!-- home fragment -->
     <string name="home_fourm">Forum Support</string>
@@ -37,7 +42,7 @@
     <string name="home_gerrit">Gerrit</string>
     <string name="title_home">Home</string>
     <string name="refresh_fail">Refresh failed!!</string>
-    
-    
+    <string name="ota_connect_token_url_fail">Can\'t connect to our token server!</string>
+    <string name="ota_get_token_fail">Get token failed</string>
     
 </resources>

@@ -2,6 +2,8 @@
 package com.magicmod.romcenter;
 
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.UserHandle;
 import android.app.ActionBar;
 import android.content.Context;
 import android.support.v4.app.Fragment;
@@ -18,6 +20,7 @@ import android.widget.Toast;
 import com.magicmod.romcenter.fragment.HomeFragment;
 import com.magicmod.romcenter.fragment.OtaFragment;
 import com.magicmod.romcenter.utils.Constants;
+import com.magicmod.romcenter.utils.ReflectionTools;
 import com.special.ResideMenu.ResideMenu;
 import com.special.ResideMenu.ResideMenuItem;
 
@@ -39,6 +42,12 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        //String userPath = Environment.isExternalStorageEmulated() ? ("/" + UserHandle.myUserId()) : "";
+        
+        String getStorageMountpoint = ReflectionTools.getStorageMountpoint(this.getApplicationContext(), false);
+        
+        Log.d(TAG, "==========  getStorageMountpoint " + getStorageMountpoint);
         
         mContext = this.getApplicationContext();
         mActionBar = this.getActionBar();

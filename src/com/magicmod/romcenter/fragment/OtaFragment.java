@@ -1,11 +1,16 @@
 package com.magicmod.romcenter.fragment;
 
+import android.R.integer;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DownloadManager;
+import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.text.Html;
@@ -21,16 +26,21 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.magicmod.cloudserver.netdisk.BaseItem;
+import com.magicmod.cloudserver.netdisk.BaseItem.ItemType;
 import com.magicmod.cloudserver.netdisk.GetServerListAsyncTask;
-import com.magicmod.cloudserver.netdisk.GetServerListAsyncTask.CallBack;
-import com.magicmod.cloudserver.netdisk.OTAUtils.ItemInfo;
+import com.magicmod.cloudserver.netdisk.NetDisk;
+import com.magicmod.cloudserver.netdisk.NetDisk.DownloadListener;
+import com.magicmod.cloudserver.netdisk.NetDisk.ListDirCallBack;
+import com.magicmod.cloudserver.netdisk.NetDiskConstants;
 import com.magicmod.cloudserver.utils.Utils;
+import com.magicmod.cloudserver.utils.Constants.AccessType;
 import com.magicmod.cloudserver.utils.Constants.OtaExceptions;
 import com.magicmod.romcenter.OtaAdapter;
 import com.magicmod.romcenter.OtaAdapter.onOtaItemClickListener;
-import com.magicmod.romcenter.OtaDownloadService;
 import com.magicmod.romcenter.R;
 import com.magicmod.romcenter.utils.Constants;
 import com.magicmod.romcenter.utils.ToastUtil;
@@ -51,27 +61,33 @@ public class OtaFragment extends Fragment{
     private static final int DIALOG_TYPE_DOWNLOAD_CONFIRM = 0x01;
     private static final int DIALOG_TYPE_INSTALL_CONFIRM = 0x02;
     private static final int DIALOG_TYPE_NO_WIFI_DL_WARNING = 0x03;
-    
-    private ArrayList<ItemInfo> mOtaLists;
-    private ItemInfo mClickedItem;
-    //private String mfullPathInstallFile;
+    private static final int DIALOG_TYPE_STOP_DOWNLOAD_CONFIRM = 0x04;
+
+    private BaseItem mClickedItem;
 
     private TextView mCurVersionView;
     private TextView mOtaSiteLinkView;
     private ListView mListView;
+    private ProgressBar mProgressBar;
     
     protected MenuItem mRefreshItem;
 
     private Date mCurrentRomDate;
-    
-    private GetServerListAsyncTask mGetServerListAsyncTask;
+    private NetDisk mNetDisk;
     private OtaAdapter mAdapter;
+    
+    private Handler mUpdateHandler = new Handler();
+    //private DownloadManager mDownloadManager;
+    
+    private static boolean mInitOK = false;
+    
+    //全局变量,所以需要确定每次只有一个download在运行
+    private long mDownloadID = -1;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setHasOptionsMenu(true);
-        mOtaLists = new ArrayList<ItemInfo>();
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
             mCurrentRomDate = sdf.parse(Utils.getMmBuildDate());
@@ -79,8 +95,23 @@ public class OtaFragment extends Fragment{
             e.printStackTrace();
             mCurrentRomDate = new Date();
         }
-        
+
+        mNetDisk = new NetDisk(getActivity());
+        mNetDisk.Init(new NetDisk.InitCallBack() {
+            @Override
+            public void OnInitSucceed() {
+                mInitOK = true;
+            }
+            @Override
+            public void OnInitFailed(OtaExceptions exception, String extraInfo) {
+                mInitOK = false;
+                ToastUtil.showShort(getActivity(), "init token error");
+             }
+        });
+        mNetDisk.setDownloadListener(mDownloadListener);
         if (DBG) Log.d(TAG, "Current rom build date is =>" + mCurrentRomDate.toString());
+        
+        showDialogInner(DIALOG_TYPE_DEV_WIP_WARNING);
     }
 
     @Override
@@ -99,9 +130,46 @@ public class OtaFragment extends Fragment{
         String link = String.format("<a href=\"%s\">%s</a>", Constants.OTA_SITE_LINK, Constants.OTA_SITE_LINK);
         mOtaSiteLinkView.setText(Html.fromHtml(String.format(getString(R.string.ota_update_site_info), link)));
         mOtaSiteLinkView.setMovementMethod(LinkMovementMethod.getInstance());
-        //mfullPathInstallFile = null;
+        mProgressBar = (ProgressBar) this.getActivity().findViewById(R.id.ota_item_dlprogress);
         mClickedItem = null;
-        showDialogInner(DIALOG_TYPE_DEV_WIP_WARNING);
+    }
+
+    @Override
+    public void onDestroy() {
+        mNetDisk.DeInit();
+        super.onDestroy();
+    }
+
+    
+    @Override
+    public void onStart() {
+        super.onStart();
+        mDownloadID = mNetDisk.getCurrentDownloadId();
+        ArrayList<BaseItem> items = UtilTools.getCachedUpdate(getActivity());
+        setAdapterData(items);
+        if (mDownloadID >= 0) {
+            if (DBG) {
+                Log.d(TAG, "onStart, download id is" + mDownloadID);
+            }
+            if (mNetDisk.getRunningDownloadFileName(mDownloadID) != null) {
+                BaseItem item = UtilTools.getRunningDownloadItem(getActivity());
+                mAdapter.setDownloadingItem(item);
+                mUpdateHandler.post(mUpdateProgress);
+            } else {
+                mDownloadID = -1;
+                UtilTools.cacheRunningDownloadItem(getActivity(), null);
+            }
+        } else {
+            mDownloadID = -1;
+            UtilTools.cacheRunningDownloadItem(getActivity(), null);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mUpdateHandler.removeCallbacks(mUpdateProgress);
+        hideRefreshAnimation();
     }
 
     @Override
@@ -126,14 +194,11 @@ public class OtaFragment extends Fragment{
 
     private void showRefreshAnimation(MenuItem item) {
         hideRefreshAnimation();
-
         mRefreshItem = item;
-
         // 这里使用一个ImageView设置成MenuItem的ActionView，这样我们就可以使用这个ImageView显示旋转动画了
         ImageView refreshActionView = (ImageView) this.getActivity().getLayoutInflater().inflate(R.layout.action_ota_refresh_view, null);
         refreshActionView.setImageResource(R.drawable.ic_action_refresh);
         mRefreshItem.setActionView(refreshActionView);
-
         // 显示刷新动画
         Animation animation = AnimationUtils.loadAnimation(this.getActivity(), R.anim.refresh_rotate);
         animation.setRepeatMode(Animation.RESTART);
@@ -158,23 +223,11 @@ public class OtaFragment extends Fragment{
     
     private void refreshAvailableList() {
         if (DBG) Log.d(TAG, "refresh  available rom list");
-
-        if (!isTaskActive()) {
-            mGetServerListAsyncTask = new GetServerListAsyncTask(this.getActivity(), mGetServerListCallBack);
-            mGetServerListAsyncTask.execute();
-        }
-
-    }
-
-    private boolean isTaskActive() {
-        return mGetServerListAsyncTask != null
-                && mGetServerListAsyncTask.getStatus() != AsyncTask.Status.FINISHED;
+        mNetDisk.listDevRom(mListDirCallBack);
     }
 
     private void cancelServerListTask () {
-        if (mGetServerListAsyncTask != null) {
-            mGetServerListAsyncTask.cancel(true);
-        }
+        mNetDisk.stopListDir();
         hideRefreshAnimation();
     }
 
@@ -185,36 +238,143 @@ public class OtaFragment extends Fragment{
     }
 
     private void downloadCheckedFile() {
-        String targetPath = String.format("%s/%s", UtilTools.getStorageDir(), Constants.UPDATES_FOLDER);
-        OtaDownloadService.start(getActivity(), mClickedItem, targetPath);        
+        if (mDownloadID >= 0) {
+            ToastUtil.showShort(getActivity(), R.string.ota_update_warning_one_download_running);
+            return;
+        }
+        mNetDisk.downloadFile(mClickedItem);
+        mAdapter.setDownloadingItem(mClickedItem);
+        UtilTools.cacheRunningDownloadItem(getActivity(), mClickedItem);
     }
     
     private void installCheckedFile() {
-        String targetPath = String.format("%s/%s", UtilTools.getStorageDir(), Constants.UPDATES_FOLDER);
-        String file = targetPath + "/" + mClickedItem.name;
         if (DBG) {
-            Log.d(TAG, String.format("== triggerUpdate for file => %s", file));
+            Log.d(TAG, String.format("== triggerUpdate for file => %s", mClickedItem.getRemoteName()));
         }
         try {
-            UtilTools.triggerUpdate(getActivity(), file);
+            UtilTools.triggerUpdate(getActivity(), mClickedItem.getRemoteName());
         } catch (IOException e) {
             e.printStackTrace();
             ToastUtil.showLong(this.getActivity(), R.string.ota_install_failed);
         }
     }
 
+    private void stopDownloading() {
+        if (mAdapter != null) {
+            mAdapter.stopProgress();
+            mAdapter.notifyDataSetChanged();
+        }
+        mNetDisk.stopDownloadFile(mDownloadID);
+        mUpdateHandler.removeCallbacks(mUpdateProgress);
+        mDownloadID = -1;
+        UtilTools.cacheRunningDownloadItem(getActivity(), null);
+    }
+    
+    private void setAdapterData(ArrayList<BaseItem> items) {
+        if (mAdapter == null) {
+            mAdapter = new OtaAdapter(getActivity());
+        }
+        mAdapter.setOtaItemClickListener(mOnOtaItemClickListener);
+        mListView.setAdapter(mAdapter);
+        mAdapter.setData(items);
+        mAdapter.setListView(mListView);
+    }
+
+    private DownloadListener mDownloadListener = new DownloadListener() {
+        
+        @Override
+        public void onDownloadSucceed(String completedFileFullPath) {
+            if (DBG) {
+                Log.d(TAG, "*** onDownloadSucceed "+ completedFileFullPath);
+            }
+            //succeed, reset local cached value
+            stopDownloading();
+        }
+        
+        @Override
+        public void onDownloadStarted(long downloadID) {
+            mDownloadID = downloadID;
+            mUpdateHandler.post(mUpdateProgress);
+        }
+        
+        @Override
+        public void onDownloadFailed(long downloadID, OtaExceptions exceptions) {
+            if (DBG) {
+                Log.d(TAG, "*** onDownloadFailed ");
+            }
+            stopDownloading();
+
+        }
+    };
+    
+    private Runnable mUpdateProgress = new Runnable() {
+        public void run() {
+            if (DBG) {
+                Log.d(TAG, "********* Runnable Loop ***********");
+            }
+            if (mDownloadID < 0) {
+                return;
+            }
+            Log.d(TAG, "******** current download is is "+ mDownloadID);
+            
+            int status = mNetDisk.getDownloadStatus(mDownloadID);
+            switch (status) {
+                case DownloadManager.STATUS_PENDING:
+                    if (DBG) {
+                        Log.d(TAG, "=== status is pengind");
+                    }
+                    mAdapter.updateProgress(-1, -1);
+                    break;
+                case DownloadManager.STATUS_PAUSED:
+                case DownloadManager.STATUS_RUNNING:
+                    if (DBG) {
+                        Log.d(TAG, "=== status is STATUS_RUNNING");
+                    }
+                    int downloadedBytes = mNetDisk.getDownloadedBytes(mDownloadID);//cursor.getInt(
+                        //cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                    int totalBytes = mNetDisk.getTotalBytes(mDownloadID);//cursor.getInt(
+                        //cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+
+                    if (DBG) {
+                        Log.d(TAG, "=== status is running, download bytes is "+downloadedBytes+" totalbytes is "+totalBytes);
+                    }
+                    if (totalBytes < 0) {
+                        mAdapter.updateProgress(-1, -1);
+                    } else {
+                        mAdapter.updateProgress(totalBytes, downloadedBytes);
+                    }
+                    break;
+                case DownloadManager.STATUS_FAILED:
+                    if (DBG) {
+                        Log.d(TAG, "status is faild");
+                    }
+                    mDownloadID = -1;
+                    break;
+            }
+            if (status != DownloadManager.STATUS_FAILED) {
+                mUpdateHandler.postDelayed(this, 1000);
+            }
+        }
+    };
+
     private onOtaItemClickListener mOnOtaItemClickListener = new onOtaItemClickListener() {
         
         @Override
-        public void onItemClicked(ItemInfo item) {
+        public void onItemClicked(BaseItem item) {
             mClickedItem = item;
+            String targetPath = String.format("%s/%s", UtilTools.getStorageDir(), Constants.UPDATES_FOLDER);
+            mClickedItem.setLocalPath(targetPath);
             
             if (DBG) {
-                Log.d(TAG, String.format("Click item => %s", mClickedItem.name));
+                Log.d(TAG, String.format("Click item => %s", mClickedItem.getRemoteName()));
             }
 
             String downloadedList[] = UtilTools.getDownloadedOtaFiles();
-            if (UtilTools.contain(downloadedList, mClickedItem.name)) {
+            if (UtilTools.contain(downloadedList, mClickedItem.getRemoteName())) {
+                showDialogInner(DIALOG_TYPE_INSTALL_CONFIRM);
+            } else if (mClickedItem.getRemoteName().contains(Utils.getMmBuildDate())) {
+                ToastUtil.showShort(getActivity(), R.string.ota_file_has_installed);
+            } else {
                 if (!Utils.isNetworkAvailable(getActivity())) {
                     ToastUtil.showShort(getActivity(), R.string.network_unavailable);
                     return;
@@ -222,38 +382,49 @@ public class OtaFragment extends Fragment{
                 if (!Utils.isWifi(getActivity())) {
                     showDialogInner(DIALOG_TYPE_NO_WIFI_DL_WARNING);
                 } else {
-                    showDialogInner(DIALOG_TYPE_INSTALL_CONFIRM);
+                    showDialogInner(DIALOG_TYPE_DOWNLOAD_CONFIRM);
                 }
-            } else if (mClickedItem.name.contains(Utils.getMmBuildDate())){
-                ToastUtil.showShort(getActivity(), R.string.ota_file_has_installed);
-            } else {
-                showDialogInner(DIALOG_TYPE_DOWNLOAD_CONFIRM);
             }
+        }
+
+        @Override
+        public void onStopDownload() {
+            showDialogInner(DIALOG_TYPE_STOP_DOWNLOAD_CONFIRM);            
         }
     };
 
-    private GetServerListAsyncTask.CallBack mGetServerListCallBack = new CallBack() {
-        
+    private NetDisk.ListDirCallBack mListDirCallBack = new  ListDirCallBack() {
+
         @Override
-        public void onResult(ArrayList<ItemInfo> items) {
+        public void onResult(ArrayList<BaseItem> items) {
             if (items == null) {
                 ToastUtil.showShort(getActivity(), R.string.refresh_fail);
                 hideRefreshAnimation();
                 return;
             }
-            ArrayList<ItemInfo> list = new ArrayList<ItemInfo>();
-            for (ItemInfo item : items) {
-                if (!item.name.contains(Utils.getMagicModVerison())) {
+            //if it is an error handle item
+            if (items.size() == 1 && items.get(0).getItemType().equals(ItemType.TYPE_ERROR_INFO_ITEM)) {
+                ToastUtil.showShort(getActivity(), items.get(0).getRemoteMd5());
+                hideRefreshAnimation();
+                return;
+            }
+            ArrayList<BaseItem> list = new ArrayList<BaseItem>();
+            for (BaseItem item : items) {
+                //if it is an error handle item
+                if (item.getItemType().equals(ItemType.TYPE_ERROR_INFO_ITEM)) {
+                    ToastUtil.showShort(getActivity(), item.getRemoteMd5());
+                }
+                if (!item.getRemoteName().contains(Utils.getMagicModVerison())) {
                     continue;
                 }
-                if (item.name.contains(".zip.md5sum")) {
+                if (item.getRemoteName().contains(".zip.md5sum")) {
                     continue;
                 }
                 
                 boolean add = true;
                 try {
                     //MagicMod-DE-4.4-20140107-LOCAL_BUILD-linux-SunRain-mako
-                    String s[] = item.name.split("-");
+                    String s[] = item.getRemoteName().split("-");
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
                     Date d = sdf.parse(s[3]);
                     if (mCurrentRomDate.after(d)) {
@@ -269,21 +440,19 @@ public class OtaFragment extends Fragment{
                 if (!add) {
                     if (DBG) {
                         Log.d(TAG, String.format("NOT ADD !!!item name is => %s, magicmod verison is => %s",
-                                item.name, Utils.getMagicModVerison()));
+                                item.getRemoteName(), Utils.getMagicModVerison()));
                     }
                     continue;
                 }
                 if(DBG) {
-                    Log.d(TAG, String.format("ADD !!! item name is => %s, magicmod verison is => %s", item.name, Utils.getMagicModVerison()));
+                    Log.d(TAG, String.format("ADD !!! item name is => %s, magicmod verison is => %s", item.getRemoteName(), Utils.getMagicModVerison()));
                 }
                 list.add(item);                
             }
-            if (mAdapter == null) {
-                mAdapter = new OtaAdapter(getActivity());
+            if (!list.isEmpty()) {
+                UtilTools.cacheAvailableUpdate(getActivity(), list);
+                setAdapterData(list);
             }
-            mAdapter.setOtaItemClickListener(mOnOtaItemClickListener);
-            mListView.setAdapter(mAdapter);
-            mAdapter.setData(list);
             hideRefreshAnimation();
         }
         
@@ -297,7 +466,7 @@ public class OtaFragment extends Fragment{
             switch(e) {
                 case CANNOT_CONNECT:
                     ToastUtil.showShort(getActivity(), R.string.network_unavailable);
-                    if (isTaskActive()) cancelServerListTask();
+                    cancelServerListTask();
                     break;
                 case NETWORK_NOT_WIFI:
                     //TODO: if netwrok not wifi, show a dialog
@@ -321,6 +490,17 @@ public class OtaFragment extends Fragment{
         public void onCancelled() {
             hideRefreshAnimation();
         }
+
+        @Override
+        public void onExecption(OtaExceptions e, String errorMsg) {
+            switch (e) {
+                case GET_TOKEN_ERROR:
+                    ToastUtil.showLong(getActivity(), errorMsg);
+                    break;
+                default:
+                    break;
+            }
+        }
     };
     
     public static class MyAlertDialogFragment extends DialogFragment {
@@ -341,13 +521,12 @@ public class OtaFragment extends Fragment{
             int type = getArguments().getInt(KEY_DIALOG_TYPE);
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             getOwner().hideRefreshAnimation();
+            builder.setTitle(R.string.ota_update_dialog_title);
+            builder.setNegativeButton(R.string.cancel, null);
             switch (type) {
                 case DIALOG_TYPE_DOWNLOAD_CONFIRM:
-                    builder.setTitle(R.string.ota_update_dialog_title);
                     builder.setMessage(R.string.ota_update_dialog_download_content);
-                    builder.setNegativeButton(R.string.cancel, null);
                     builder.setPositiveButton(R.string.ok, new OnClickListener() {
-                        
                         @Override
                         public void onClick(DialogInterface arg0, int arg1) {
                             getOwner().downloadCheckedFile();                            
@@ -355,11 +534,8 @@ public class OtaFragment extends Fragment{
                     });
                     break;
                 case DIALOG_TYPE_INSTALL_CONFIRM:
-                    builder.setTitle(R.string.ota_update_dialog_title);
                     builder.setMessage(R.string.ota_update_dialog_install_content);
-                    builder.setNegativeButton(R.string.cancel, null);
                     builder.setPositiveButton(R.string.ok, new OnClickListener() {
-                        
                         @Override
                         public void onClick(DialogInterface arg0, int arg1) {
                             getOwner().installCheckedFile();
@@ -367,14 +543,20 @@ public class OtaFragment extends Fragment{
                     });
                     break;
                 case DIALOG_TYPE_NO_WIFI_DL_WARNING:
-                    builder.setTitle(R.string.ota_update_dialog_title);
                     builder.setMessage(R.string.no_wifi_warning);
-                    builder.setNegativeButton(R.string.cancel, null);
                     builder.setPositiveButton(R.string.ok, new OnClickListener() {
-                        
                         @Override
                         public void onClick(DialogInterface arg0, int arg1) {
                             getOwner().downloadCheckedFile();
+                        }
+                    });
+                    break;
+                case DIALOG_TYPE_STOP_DOWNLOAD_CONFIRM:
+                    builder.setMessage(R.string.ota_update_dialog_stop_dl_content);
+                    builder.setPositiveButton(R.string.ok, new OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            getOwner().stopDownloading();
                         }
                     });
                     break;

@@ -13,7 +13,6 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.magicmod.cloudserver.netdisk.OTAUtils.ItemInfo;
 import com.magicmod.romcenter.OtaAdapter;
 import com.magicmod.romcenter.R;
 import com.magicmod.romcenter.utils.Constants;

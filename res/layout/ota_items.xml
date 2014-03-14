@@ -4,18 +4,39 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal" >
 
-    <TextView
-        android:id="@+id/ota_item_rominfo"
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="center_vertical"
-        android:text="TextView" />
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/ota_item_rominfo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical" />
+
+        <TextView
+            android:id="@+id/ota_item_romsummary"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="TextView" />
+
+        <ProgressBar
+            android:id="@+id/ota_item_dlprogress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
 
     <ImageButton
-        android:id="@+id/ota_item_romstate"
+        android:id="@+id/ota_item_romstate_button"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical" />
+
         <!-- android:background="@drawable/ic_ota_verison_available"  -->
 
 </LinearLayout>

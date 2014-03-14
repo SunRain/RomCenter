@@ -24,10 +24,13 @@
     <string name="ota_update_dialog_download_content">是否下载当前文件?</string>
     <string name="ota_update_dialog_install_content">是否安装当前更新?</string>
     <string name="ota_fragment_open_waning">注意:OTA更新功能还在开发中,这意味这此功能目前还不稳定!!!</string>
+    <string name="ota_update_warning_one_download_running">下载任务进行中.</string>
     <string name="no_sdcard_worning">没有SD卡!</string>
     <string name="no_enough_space_worning">没有足够的存储空间!</string>
     <string name="no_new_version_worning">无可用更新!</string> 
     <string name="ota_install_failed">安装OTA更新失败!!</string>
+    <string name="ota_item_summary_new">新版本</string>
+    <string name="ota_item_summary_install">安装</string>
     <string name="ota_file_has_installed">当前版本已安装!</string>
     
     <!-- home fragment -->
@@ -36,7 +39,8 @@
     <string name="home_download">下载</string>
     <string name="home_gerrit">Gerrit代码审核</string>
     <string name="title_home">主页</string>
-    
-    
+    <string name="refresh_fail">刷新失败!!</string>
+    <string name="ota_connect_token_url_fail">无法链接到token服务器!</string>
+    <string name="ota_get_token_fail">获取token失败</string>
     
 </resources>
