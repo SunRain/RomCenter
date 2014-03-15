@@ -52,7 +52,7 @@ public class OtaFragment extends Fragment{
     private static final int DIALOG_TYPE_INSTALL_CONFIRM = 0x02;
     private static final int DIALOG_TYPE_NO_WIFI_DL_WARNING = 0x03;
     
-    private ArrayList<ItemInfo> mOtaLists;
+    //private ArrayList<ItemInfo> mOtaLists;
     private ItemInfo mClickedItem;
     //private String mfullPathInstallFile;
 
@@ -71,7 +71,7 @@ public class OtaFragment extends Fragment{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setHasOptionsMenu(true);
-        mOtaLists = new ArrayList<ItemInfo>();
+        //mOtaLists = new ArrayList<ItemInfo>();
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
             mCurrentRomDate = sdf.parse(Utils.getMmBuildDate());
@@ -190,13 +190,13 @@ public class OtaFragment extends Fragment{
     }
     
     private void installCheckedFile() {
-        String targetPath = String.format("%s/%s", UtilTools.getStorageDir(), Constants.UPDATES_FOLDER);
-        String file = targetPath + "/" + mClickedItem.name;
+        //String targetPath = String.format("%s/%s", UtilTools.getStorageDir(), Constants.UPDATES_FOLDER);
+        //String file = Constants.UPDATES_FOLDER + "/" + mClickedItem.name;
         if (DBG) {
-            Log.d(TAG, String.format("== triggerUpdate for file => %s", file));
+            Log.d(TAG, String.format("== triggerUpdate for file => %s", mClickedItem.name));
         }
         try {
-            UtilTools.triggerUpdate(getActivity(), file);
+            UtilTools.triggerUpdate(getActivity(), mClickedItem.name);
         } catch (IOException e) {
             e.printStackTrace();
             ToastUtil.showLong(this.getActivity(), R.string.ota_install_failed);
@@ -215,6 +215,10 @@ public class OtaFragment extends Fragment{
 
             String downloadedList[] = UtilTools.getDownloadedOtaFiles();
             if (UtilTools.contain(downloadedList, mClickedItem.name)) {
+                showDialogInner(DIALOG_TYPE_INSTALL_CONFIRM);
+            } else if (mClickedItem.name.contains(Utils.getMmBuildDate())) {
+                ToastUtil.showShort(getActivity(), R.string.ota_file_has_installed);
+            } else {
                 if (!Utils.isNetworkAvailable(getActivity())) {
                     ToastUtil.showShort(getActivity(), R.string.network_unavailable);
                     return;
@@ -222,12 +226,8 @@ public class OtaFragment extends Fragment{
                 if (!Utils.isWifi(getActivity())) {
                     showDialogInner(DIALOG_TYPE_NO_WIFI_DL_WARNING);
                 } else {
-                    showDialogInner(DIALOG_TYPE_INSTALL_CONFIRM);
+                    showDialogInner(DIALOG_TYPE_DOWNLOAD_CONFIRM);
                 }
-            } else if (mClickedItem.name.contains(Utils.getMmBuildDate())){
-                ToastUtil.showShort(getActivity(), R.string.ota_file_has_installed);
-            } else {
-                showDialogInner(DIALOG_TYPE_DOWNLOAD_CONFIRM);
             }
         }
     };
