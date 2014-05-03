@@ -17,6 +17,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 
+import cn.jpush.android.api.JPushInterface;
+
 import com.magicmod.romcenter.fragment.HomeFragment;
 import com.magicmod.romcenter.fragment.OtaFragment;
 import com.magicmod.romcenter.utils.Constants;
@@ -69,6 +71,18 @@ public class MainActivity extends FragmentActivity {
         return true;
     }
     
+    @Override
+    protected void onResume() {
+        super.onResume();
+        JPushInterface.onResume(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        JPushInterface.onPause(this);
+    }
+
     //动态的改变actionbar menu
     //使用 mActivity.getWindow().invalidatePanelMenu(Window.FEATURE_OPTIONS_PANEL);改变布局
     @Override
