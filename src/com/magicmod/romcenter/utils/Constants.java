@@ -2,7 +2,7 @@ package com.magicmod.romcenter.utils;
 
 public class Constants {
     
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
     public static final String UPDATES_FOLDER = "MM_OTA";
     
     public static final String OTA_DL_FILE = "ota_download_file";
