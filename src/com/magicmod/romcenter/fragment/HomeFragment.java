@@ -1,20 +1,18 @@
 package com.magicmod.romcenter.fragment;
 
+import android.app.Fragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.magicmod.romcenter.R;
-import com.magicmod.romcenter.adapter.OtaAdapter;
 import com.magicmod.romcenter.utils.Constants;
 import com.magicmod.romcenter.utils.UtilTools;
 

@@ -40,7 +40,6 @@ public class ReflectionTools {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        Log.d("aaaaaaa", "=============================== Cant find value");
         return "";
     }
     

@@ -4,8 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.text.Spanned;
+import android.text.TextUtils;
 
 import com.magicmod.cloudserver.netdisk.BaseItem;
 import com.magicmod.cloudserver.netdisk.BaseItem.ItemType;
@@ -17,6 +20,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 
 public class UtilTools {
@@ -195,5 +200,77 @@ public class UtilTools {
             return null;
         }
         return items;
+    }
+    
+    public static String getUniqueID(Context context) {
+        final String id = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+        return digest(context.getPackageName() + id);
+    }
+
+    public static String getCarrier(Context context) {
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        String carrier = tm.getNetworkOperatorName();
+        if (TextUtils.isEmpty(carrier)) {
+            carrier = "Unknown";
+        }
+        return carrier;
+    }
+
+    public static String getCarrierId(Context context) {
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        String carrierId = tm.getNetworkOperator();
+        if (TextUtils.isEmpty(carrierId)) {
+            carrierId = "0";
+        }
+        return carrierId;
+    }
+
+    public static String getCountryCode(Context context) {
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        String countryCode = tm.getNetworkCountryIso();
+        if (TextUtils.isEmpty(countryCode)) {
+            countryCode = "Unknown";
+        }
+        return countryCode;
+    }
+
+    public static String getDevice() {
+        String s = ReflectionTools.getProperty("ro.mm.device");
+        if (TextUtils.isEmpty(s)) {
+            s = "Unknown";
+        }
+        return s;
+    }
+
+    public static String getModVersion() {
+        String s = ReflectionTools.getProperty("ro.mm.version");
+        if (TextUtils.isEmpty(s)) {
+            s = "Unknown";
+        }
+        return s;
+    }
+    
+    public static String getRomName() {
+        String s = ReflectionTools.getProperty("ro.mm.mmname");
+        if (TextUtils.isEmpty(s)) {
+            s = "Unknown";
+        }
+        return s;
+    }
+
+    public static String getRomVersion(){
+        String s = ReflectionTools.getProperty("ro.mm.mmversion");
+        if (TextUtils.isEmpty(s)) {
+            s = "Unknown";
+        }
+        return s;
+    }
+    public static String digest(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            return new BigInteger(1, md.digest(input.getBytes())).toString(16).toUpperCase();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

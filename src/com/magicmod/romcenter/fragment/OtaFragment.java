@@ -1,18 +1,14 @@
 package com.magicmod.romcenter.fragment;
 
-import android.R.integer;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.app.DownloadManager;
-import android.bluetooth.BluetoothAdapter.LeScanCallback;
+import android.app.Fragment;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.os.AsyncTask;
 import android.os.Handler;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
@@ -31,13 +27,10 @@ import android.widget.TextView;
 
 import com.magicmod.cloudserver.netdisk.BaseItem;
 import com.magicmod.cloudserver.netdisk.BaseItem.ItemType;
-import com.magicmod.cloudserver.netdisk.GetServerListAsyncTask;
 import com.magicmod.cloudserver.netdisk.NetDisk;
 import com.magicmod.cloudserver.netdisk.NetDisk.DownloadListener;
 import com.magicmod.cloudserver.netdisk.NetDisk.ListDirCallBack;
-import com.magicmod.cloudserver.netdisk.NetDiskConstants;
 import com.magicmod.cloudserver.utils.Utils;
-import com.magicmod.cloudserver.utils.Constants.AccessType;
 import com.magicmod.cloudserver.utils.Constants.OtaExceptions;
 import com.magicmod.romcenter.adapter.OtaAdapter;
 import com.magicmod.romcenter.adapter.OtaAdapter.onOtaItemClickListener;

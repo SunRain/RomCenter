@@ -137,8 +137,27 @@
         <!-- Required  . Enable it you can get statistics data with channel -->
         <meta-data android:name="JPUSH_CHANNEL" android:value="developer-default"/>
         <meta-data android:name="JPUSH_APPKEY" android:value="14d12209691e394c9d0c387f" /> <!--  </>值来自开发者平台取得的AppKey-->
-        
+
         <!--  JPush end -->
+        
+        <service
+            android:name=".service.StateReportingService"
+            android:label="ReportingService"
+            android:enabled="true"
+            android:exported="false" >
+        </service>
+        
+        <receiver
+            android:name=".receiver.StateReportingServiceReceiver"
+            android:enabled="true"
+            android:exported="false"
+            android:label="ReportingServiceManager" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+
 </application>
 
 </manifest>

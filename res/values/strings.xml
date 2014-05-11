@@ -6,8 +6,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="menu_home">Home</string>
     <string name="menu_ota">OTA</string>
-
-
+    <string name="menu_state">State</string>
     <string name="network_unavailable">Can\'t connect to network</string>
     <string name="no_wifi_warning">You\'re not using wifi now, do U want to continue?</string>
     
@@ -45,4 +44,28 @@
     <string name="ota_connect_token_url_fail">Can\'t connect to our token server!</string>
     <string name="ota_get_token_fail">Get token failed</string>
     
+    <!-- Rom State fragment -->
+    <string name="title_state">RomState</string>
+    <string name="state_settings">Set state report</string>
+    <string name="anonymous_statistics_title">MagicMod statistics</string>
+    <string name="anonymous_statistics_summary">Help make MagicMod better by opting into anonymous statistics reporting</string>
+    <string name="anonymous_statistics_warning_title">About</string>
+    <string name="anonymous_statistics_warning">Opting into MagicMod Statistics will allow non-personal data to be submitted to the
+        developers of MagicMod to track unique installations across devices. The information submitted includes an unique identifier,
+        which does not compromise your privacy or personal data. The data is submitted during each boot.\n\nFor an example of the data that is submitted, tap on Preview Data.</string>
+    <string name="anonymous_statistics_disable_warning">WARNING:Our OTA update server need to check the uploaded state UID to fit your device, if U disabled this, 
+        U may not be able to connet to our OTA server\(U may got \"Init token error\" message when open OTA menu\).</string>
+    <string name="enable_reporting_title">Enable reporting</string>
+    <string name="preview_data_title">Preview data</string>
+    <string name="reported_data_title">Reported data</string>
+    <string name="reported_data_summary">Date will be uploaded to our state server</string>
+    <string name="view_stats_title">View stats</string>
+    <string name="anonymous_learn_more">Learn more</string>
+    <string name="anonymous_notification_desc">Enable or Disable MagicMod Statistics</string>
+    <string name="preview_id_title">Unique ID</string>
+    <string name="preview_device_title">Device</string>
+    <string name="preview_version_title">Version</string>
+    <string name="preview_country_title">Country</string>
+    <string name="preview_carrier_title">Carrier</string>
+
 </resources>

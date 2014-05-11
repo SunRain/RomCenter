@@ -4,11 +4,12 @@ package com.magicmod.romcenter;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.UserHandle;
+import android.preference.PreferenceFragment;
 import android.app.ActionBar;
+import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,12 +22,13 @@ import cn.jpush.android.api.JPushInterface;
 
 import com.magicmod.romcenter.fragment.HomeFragment;
 import com.magicmod.romcenter.fragment.OtaFragment;
+import com.magicmod.romcenter.fragment.RomStateFragment;
 import com.magicmod.romcenter.utils.Constants;
 import com.magicmod.romcenter.utils.ReflectionTools;
 import com.special.ResideMenu.ResideMenu;
 import com.special.ResideMenu.ResideMenuItem;
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
     private static final boolean DBG = Constants.DEBUG;
     
@@ -34,9 +36,11 @@ public class MainActivity extends FragmentActivity {
     private ResideMenu mResideMenu;
     private ResideMenuItem mHomeMenuItem;
     private ResideMenuItem mOtaMenuItem;
+    private ResideMenuItem mRomStateItem;
 
     HomeFragment mHomeFragment;
     OtaFragment mOtaFragment;
+    RomStateFragment mRomStateFragment;
     ActionBar mActionBar;
     Context mContext;
 
@@ -49,7 +53,7 @@ public class MainActivity extends FragmentActivity {
         
         String getStorageMountpoint = ReflectionTools.getStorageMountpoint(this.getApplicationContext(), false);
         
-        Log.d(TAG, "==========  getStorageMountpoint " + getStorageMountpoint);
+        //Log.d(TAG, "==========  getStorageMountpoint " + getStorageMountpoint);
         
         mContext = this.getApplicationContext();
         mActionBar = this.getActionBar();
@@ -61,6 +65,7 @@ public class MainActivity extends FragmentActivity {
         
         mHomeFragment = new HomeFragment();
         mOtaFragment = new OtaFragment();
+        mRomStateFragment = new RomStateFragment();
         changeFragment(mHomeFragment);
     }
 
@@ -132,9 +137,12 @@ public class MainActivity extends FragmentActivity {
         mHomeMenuItem.setOnClickListener(mOnResideMenuItemClickListener);
         mOtaMenuItem = new ResideMenuItem(this, R.drawable.ic_ota, R.string.menu_ota);
         mOtaMenuItem.setOnClickListener(mOnResideMenuItemClickListener);
+        mRomStateItem = new ResideMenuItem(this, R.drawable.ic_state, R.string.menu_state);
+        mRomStateItem.setOnClickListener(mOnResideMenuItemClickListener);
         
         mResideMenu.addMenuItem(mHomeMenuItem);
         mResideMenu.addMenuItem(mOtaMenuItem);
+        mResideMenu.addMenuItem(mRomStateItem);
     }
     
     private ResideMenu.OnMenuListener mOnMenuListener = new ResideMenu.OnMenuListener() {
@@ -165,6 +173,10 @@ public class MainActivity extends FragmentActivity {
                 mActionBar.setTitle(R.string.title_home);
                 isMenuOpened = true;
                 changeFragment(mHomeFragment);
+            } else if (v == mRomStateItem) {
+                mActionBar.setTitle(R.string.title_state);
+                isMenuOpened = true;
+                changeFragment(mRomStateFragment);
             }
             mResideMenu.closeMenu();
             isMenuOpened = false;
@@ -172,12 +184,20 @@ public class MainActivity extends FragmentActivity {
     };
     
     private void changeFragment(Fragment targetfFragment) {
-        this.getSupportFragmentManager()
+        this.getFragmentManager()
                 .beginTransaction()
                 .replace(R.id.main_fragment, targetfFragment, "targetFragment")
                 .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 .commit();
         
+    }
+    
+    private void changeFragment(PreferenceFragment targerFragment) {
+        this.getFragmentManager()
+        .beginTransaction()
+        .replace(R.id.main_fragment, targerFragment, "targetFragment")
+        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+        .commit();
     }
 
 }
