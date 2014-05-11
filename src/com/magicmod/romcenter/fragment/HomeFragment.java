@@ -13,8 +13,8 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.magicmod.romcenter.OtaAdapter;
 import com.magicmod.romcenter.R;
+import com.magicmod.romcenter.adapter.OtaAdapter;
 import com.magicmod.romcenter.utils.Constants;
 import com.magicmod.romcenter.utils.UtilTools;
 

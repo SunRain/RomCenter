@@ -1,4 +1,4 @@
-package com.magicmod.romcenter;
+package com.magicmod.romcenter.adapter;
 
 import android.R.raw;
 import android.content.Context;
@@ -15,6 +15,11 @@ import android.widget.TextView;
 
 import com.magicmod.cloudserver.netdisk.BaseItem;
 import com.magicmod.cloudserver.utils.Utils;
+import com.magicmod.romcenter.R;
+import com.magicmod.romcenter.R.drawable;
+import com.magicmod.romcenter.R.id;
+import com.magicmod.romcenter.R.layout;
+import com.magicmod.romcenter.R.string;
 import com.magicmod.romcenter.utils.Constants;
 import com.magicmod.romcenter.utils.UtilTools;
 
